@@ -87,7 +87,11 @@ turno <- function(jug, pts = 0){
     cat("Dados disponibles = ", dados, "\n\n")
     tirar <- leer_opciones("¿Tirar dados?", "Si", "No")
     if(tirar == 2){
-      x <- 1
+      if(pts + acumulado > 1000){
+        cat("\nSuperaste los 1000 puntos. ¡Perdiste los puntos del turno!\n")
+        continuar()
+        return(0)
+      }
       return(acumulado)
     }
     if(tirar == 1){
@@ -96,10 +100,22 @@ turno <- function(jug, pts = 0){
       uno <- contar_dados(tirada, 1)
       cinco <- contar_dados(tirada, 5)
       tot_tira <- uno*100 + cinco*50
-      cat("\nSacaste ", tot_tira, "puntos.\n")
-      cat("\nTiro finalizado\n")
-      acumulado <- tot_tira + acumulado
+      
+      if(tot_tira == 0){
+        cat("\nNo salió ningún 1 ni 5. ¡Perdiste el turno!\n")
+        continuar()
+        return(0)
+      }
+      
+      acumulado <- acumulado + tot_tira
       dados <- dados - uno - cinco
+      cat("\nSacaste ", tot_tira, "puntos.\n")
+      
+      if(dados == 0){
+        cat("\n¡Retiraste todos los dados! Volvés a tirar con 5 dados.\n")
+        dados <- 5
+      }
+      
       continuar()
     }
   } 
@@ -128,7 +144,32 @@ jugador2 <- leer_palabra()
 texto_lento("\n¡Perfecto!\nVan a jugar ", jugador1, " contra ", jugador2, ".\n", sep = "")
 texto_lento("¿Están listos?")
 continuar()
-turno(jugador1)
+pts1 <- 0
+pts2 <- 0
+
+while (pts1 < 1000 && pts2 < 1000) {
+  pts1 <- pts1 + turno(jugador1, pts1)
+  
+  if (pts1 >= 1000) {
+    pts2 <- pts2 + turno(jugador2, pts2)
+    break
+  }
+  
+  pts2 <- pts2 + turno(jugador2, pts2)
+}
+
+if (pts1 == 1000 && pts2 == 1000) {
+  titulo("EMPATE")
+  cat("¡Ambos jugadores llegaron a 1000 puntos en la misma ronda!\n")
+} else if (pts1 == 1000) {
+  titulo("¡GANADOR!")
+  cat("¡Felicitaciones", jugador1, "ganaste la partida!\n")
+} else {
+  titulo("¡GANADOR!")
+  cat("¡Felicitaciones", jugador2, "ganaste la partida!\n")
+}
+
+pausa()
 
 #-------------------------------------------------------------------------------
 
